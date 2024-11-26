@@ -44,12 +44,12 @@ class CompletionUser(HttpUser):
         payload = {
             "model": "gpt-5-turbo-1",
             "prompt": "Once upon a time",
-            "max_tokens": 10,
+            "max_tokens": 100,
         }
         self.client.post(
             url,
             json=payload,
-            headers={"ocp-apim-subscription-key": apim_subscription_one_key},
+            headers={"api-key": apim_subscription_one_key},
         )
 
 
@@ -227,4 +227,6 @@ ApiManagementGatewayLogs
         include_link=True,
     )
 
-    query_processor.run_queries()
+    query_processor.run_queries(
+        all_queries_link_text="Show all queries in Log Analytics"
+    )

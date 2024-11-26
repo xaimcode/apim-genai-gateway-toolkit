@@ -29,8 +29,10 @@ param simulatorApiKey string
 param containerAppEnvName string
 param containerRegistryName string
 param keyVaultName string
-param storageAccountName string
 param appInsightsName string
+
+@description('The tag of the simulator image to deploy')
+param simulatorImageTag string
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
   name: resourceGroupName
@@ -44,15 +46,14 @@ module simulatorPTU1 'modules/simulatorInstance.bicep' = {
     resourceSuffix: resourceSuffix
     containerAppEnvName: containerAppEnvName
     containerRegistryName: containerRegistryName
+    simulatorImageTag: simulatorImageTag
     keyVaultName: keyVaultName
-    storageAccountName: storageAccountName
     appInsightsName: appInsightsName
     simulatorApiKey: simulatorApiKey
     apiSimulatorNameSuffix: 'ptu1'
     simulatorMode: 'generate'
     extensionPath: '' // no extensions used currently
     logLevel: 'INFO'
-    openAIDeploymentConfigPath:'/mnt/simulator/simulator_deployment_config.json'
     azureOpenAIEndpoint:'' // only needed for record mode
     azureOpenAIKey:'' // only needed for record mode
     recordingAutoSave: 'false' // only needed for record mode
@@ -68,15 +69,14 @@ module simulatorPAYG1 'modules/simulatorInstance.bicep' = {
     resourceSuffix: resourceSuffix
     containerAppEnvName: containerAppEnvName
     containerRegistryName: containerRegistryName
+    simulatorImageTag: simulatorImageTag
     keyVaultName: keyVaultName
-    storageAccountName: storageAccountName
     appInsightsName: appInsightsName
     simulatorApiKey: simulatorApiKey
     apiSimulatorNameSuffix: 'payg1'
     simulatorMode: 'generate'
     extensionPath: '' // no extensions used currently
     logLevel: 'INFO'
-    openAIDeploymentConfigPath:'/mnt/simulator/simulator_deployment_config.json'
     azureOpenAIEndpoint:'' // only needed for record mode
     azureOpenAIKey:'' // only needed for record mode
     recordingAutoSave: 'false' // only needed for record mode
@@ -92,15 +92,14 @@ module simulatorPAYG2 'modules/simulatorInstance.bicep' = {
     resourceSuffix: resourceSuffix
     containerAppEnvName: containerAppEnvName
     containerRegistryName: containerRegistryName
+    simulatorImageTag: simulatorImageTag
     keyVaultName: keyVaultName
-    storageAccountName: storageAccountName
     appInsightsName: appInsightsName
     simulatorApiKey: simulatorApiKey
     apiSimulatorNameSuffix: 'payg2'
     simulatorMode: 'generate'
     extensionPath: '' // no extensions used currently
     logLevel: 'INFO'
-    openAIDeploymentConfigPath:'/mnt/simulator/simulator_deployment_config.json'
     azureOpenAIEndpoint:'' // only needed for record mode
     azureOpenAIKey:'' // only needed for record mode
     recordingAutoSave: 'false' // only needed for record mode

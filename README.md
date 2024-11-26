@@ -9,6 +9,7 @@
 		- [Prerequisites for non Dev Container setup](#prerequisites-for-non-dev-container-setup)
 	- [Deploying the Accelerator](#deploying-the-accelerator)
 	- [Gateway Capabilities](#gateway-capabilities)
+	- [Gateway Backend Options](#gateway-backend-options)
 	- [Testing Gateway Capabilities](#testing-gateway-capabilities)
 	- [Troubleshooting](#troubleshooting)
 
@@ -16,7 +17,7 @@
 
 The aim of this toolkit is to provide a quick start for deploying a GenAI Gateway using Azure API Management (APIM), and to demonstrate some of the GenAI capabilities in a controlled environment.
 
-The APIM gateway that's provisioned by this toolkit contains policies that demonstrate different [GenAI Gateway capabilities](#gateway-capabilities) and the `end-to-end` tests allows to simulate different scenarios and demonstrate the capabilities by adjusting the configuration of the [OpenAI API simulator](https://github.com/stuartleeks/aoai-simulated-api) that's used as a backend.
+The APIM gateway that's provisioned by this toolkit contains policies that demonstrate different [GenAI Gateway capabilities](#gateway-capabilities) and the `end-to-end` tests allows to simulate different scenarios and demonstrate the capabilities by adjusting the configuration of the [OpenAI API simulator](https://github.com/microsoft/aoai-api-simulator) that's used as a backend.
 
 <video src="https://github.com/Azure-Samples/apim-genai-gateway-toolkit/assets/16926044/b1844049-01b3-4956-822b-eb6cb3f99c1c" title="demo" width="360" height="240" controls></video>
 
@@ -31,7 +32,7 @@ To read more about considerations when implementing a GenAI Gateway, see [this a
 At a high level the toolkit contains 3 main components,
 
 1. **APIM Gateway** - The API Management Gateway that will host the GenAI Gateway policies.
-2. [**OpenAI API Simulator**](https://github.com/stuartleeks/aoai-simulated-api) - A simple API that simulates the OpenAI API. The simulator will allow to control the latency, and response to simulate different scenarios.
+2. [**OpenAI API Simulator**](https://github.com/microsoft/aoai-api-simulator) - A simple API that simulates the OpenAI API. The simulator will allow to control the latency, and response to simulate different scenarios.
 3. **End-to-End Tests** - A set of tests that will demonstrate the GenAI Gateway capabilities in action. These are python scripts written on top of locust.io to simulate the traffic and demonstrate the capabilities.
 
 ![Architecture](./docs/assets/genai-accelerator.jpg)
@@ -71,33 +72,42 @@ To see the GenAI Gateway capabilities in action, you can deploy the infrastructu
 
 2. Sign in with the Azure CLI:
 
-```bash
-az login
-```
+	```bash
+	az login
+	```
 
 3. Deploy the Bicep infrastructure:
 
-```bash
-./scripts/deploy.sh
-```
+	```bash
+	./scripts/deploy.sh
+	```
 
 ## Gateway Capabilities
 
 This repo currently contains the policies showing how to implement these GenAI Gateway capabilities:
 
-| Capability                                                                      | Description                                                             |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [Latency based routing](./capabilities/latency-routing/README.md) | Route traffic to the endpoint with the lowest latency. |
-| [Load balancing (round-robin)](./capabilities/load-balancing/README.md) | Load balance traffic across PAYG endpoints using round-robin algorithm. |
-| [Managing spikes with PAYG](./capabilities/manage-spikes-with-payg/README.md) | Manage spikes in traffic by routing traffic to PAYG endpoints when a PTU is out of capacity. |
-| [Adaptive rate limiting](./capabilities/rate-limiting/README.md) | Dynamically adjust rate-limits applied to different workloads|
-| [Tracking token usage](./capabilities/usage-tracking//README.md) | Record the token consumption for usage tracking and attribution|
+| Capability                                                                    | Description                                                                                                               |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [Latency based routing](./capabilities/latency-routing/README.md)             | Route traffic to the endpoint with the lowest latency.                                                                    |
+| [Load balancing (round-robin)](./capabilities/load-balancing/README.md)       | Load balance traffic across PAYG endpoints using round-robin algorithm.                                                   |
+| [Managing spikes with PAYG](./capabilities/manage-spikes-with-payg/README.md) | Manage spikes in traffic by routing traffic to PAYG endpoints when a PTU is out of capacity.                              |
+| [Prioritization](./capabilities/prioritization/README.md)                     | Enable prioritization between requests and dynamically apply throttling to low-priority requests when capacity is limited |
+| [Tracking token usage](./capabilities/usage-tracking//README.md)              | Record the token consumption for usage tracking and attribution                                                           |
+
+## Gateway Backend Options
+
+The toolkit is designed to deploy the API Management gateway alongside the OpenAI API Simulator, but can be used with Azure Open AI instances as well.
+
+To use the simulator, set the `USE_SIMULATOR` option in your `.env` file to `true`.
+
+To use Azure OpenAI backends instead, set the `USE_SIMULATOR` option in your `.env` file to `false`, and add the base URLs and API Keys for each backend (`PTU_DEPLOYMENT_1_BASE_URL`, `PTU_DEPLOYMENT_1_API_KEY`, etc.).
 
 ## Testing Gateway Capabilities
 
-The easiest way to see the gateway capabilities in action is to deploy the gateway along with the OpenAI API Simualtor (set the `USE_SIMULATOR` option in your `.env` file to `true`).
+> [!CAUTION]
+> Testing gateway capabilities with live Azure OpenAI backends, rather than the OpenAI API Simulator, will result in increased costs.
 
-Once you have the gateway and simulator deployed, see the `README.md` in the relevant capability folder for instructions on how to test the capability. (NOTE: currently not all capabilities have tests implemented)
+The easiest way to see the gateway capabilities in action is to deploy the gateway along with the OpenAI API Simulator. Once you have the gateway and simulator deployed, see the `README.md` in the relevant capability folder for instructions on how to test the capability. (NOTE: currently not all capabilities have tests implemented)
 
 ## Troubleshooting
 

@@ -58,7 +58,7 @@ param appInsightsName string
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-resource apiManagementService 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
+resource apiManagementService 'Microsoft.ApiManagement/service@2024-05-01' = {
   name: apiManagementServiceName
   location: location
   sku: {
@@ -68,13 +68,16 @@ resource apiManagementService 'Microsoft.ApiManagement/service@2023-05-01-previe
   properties: {
     publisherEmail: publisherEmail
     publisherName: publisherName
+    apiVersionConstraint: {
+      minApiVersion: '2019-12-01'
+    }
   }
   identity: {
     type: 'SystemAssigned'
   }
 }
 
-resource azureOpenAISimpleRoundRobinAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAISimpleRoundRobinAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-simple-round-robin'
   properties: {
@@ -83,10 +86,13 @@ resource azureOpenAISimpleRoundRobinAPI 'Microsoft.ApiManagement/service/apis@20
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAISimpleRoundRobinAPIv2 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAISimpleRoundRobinAPIv2 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-simple-round-robin-v2'
   properties: {
@@ -95,10 +101,13 @@ resource azureOpenAISimpleRoundRobinAPIv2 'Microsoft.ApiManagement/service/apis@
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAIWeightedRoundRobinAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAIWeightedRoundRobinAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-weighted-round-robin'
   properties: {
@@ -107,10 +116,13 @@ resource azureOpenAIWeightedRoundRobinAPI 'Microsoft.ApiManagement/service/apis@
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAIWeightedRoundRobinAPIv2 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAIWeightedRoundRobinAPIv2 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-weighted-round-robin-v2'
   properties: {
@@ -119,10 +131,13 @@ resource azureOpenAIWeightedRoundRobinAPIv2 'Microsoft.ApiManagement/service/api
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAIRetryWithPayAsYouGoAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAIRetryWithPayAsYouGoAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-retry-with-payg'
   properties: {
@@ -131,10 +146,13 @@ resource azureOpenAIRetryWithPayAsYouGoAPI 'Microsoft.ApiManagement/service/apis
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAIRetryWithPayAsYouGoAPIv2 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAIRetryWithPayAsYouGoAPIv2 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-retry-with-payg-v2'
   properties: {
@@ -143,22 +161,13 @@ resource azureOpenAIRetryWithPayAsYouGoAPIv2 'Microsoft.ApiManagement/service/ap
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAIAdaptiveRateLimitingAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
-  parent: apiManagementService
-  name: 'aoai-api-rate-limiting'
-  properties: {
-    path: '/rate-limiting/openai'
-    displayName: 'AOAIAPI-RateLimiting'
-    protocols: ['https']
-    value: loadTextContent('../api-specs/openapi-spec.json')
-    format: 'openapi+json'
-  }
-}
-
-resource azureOpenAILatencyRoutingAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAILatencyRoutingAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-latency-routing'
   properties: {
@@ -167,10 +176,13 @@ resource azureOpenAILatencyRoutingAPI 'Microsoft.ApiManagement/service/apis@2023
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAIUsageTrackingAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAIUsageTrackingAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-api-usage-tracking'
   properties: {
@@ -179,10 +191,43 @@ resource azureOpenAIUsageTrackingAPI 'Microsoft.ApiManagement/service/apis@2023-
     protocols: ['https']
     value: loadTextContent('../api-specs/openapi-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource helperAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+resource azureOpenAIPrioritizationTokenCalculatingAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
+  parent: apiManagementService
+  name: 'aoai-api-prioritization-token-calculating'
+  properties: {
+    path: '/prioritization-token-calculating/openai'
+    displayName: 'AOAIAPI-Prioritization-TokenCalculating'
+    protocols: ['https']
+    value: loadTextContent('../api-specs/openapi-spec.json')
+    format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
+  }
+}
+
+resource azureOpenAIPrioritizationTokenTrackingAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
+  parent: apiManagementService
+  name: 'aoai-api-prioritization-tracking'
+  properties: {
+    path: '/prioritization-token-tracking/openai'
+    displayName: 'AOAIAPI-Prioritization-TokenTracking'
+    protocols: ['https']
+    value: loadTextContent('../api-specs/openapi-spec.json')
+    format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
+  }
+}
+
+resource helperAPI 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apiManagementService
   name: 'helper-apis'
   properties: {
@@ -191,10 +236,13 @@ resource helperAPI 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
     protocols: ['https']
     value: loadTextContent('../api-specs/support-api-spec.json')
     format: 'openapi+json'
+    subscriptionKeyParameterNames: {
+      header: 'api-key'
+    }
   }
 }
 
-resource azureOpenAIProduct 'Microsoft.ApiManagement/service/products@2023-05-01-preview' = {
+resource azureOpenAIProduct 'Microsoft.ApiManagement/service/products@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-product'
   properties: {
@@ -212,22 +260,23 @@ var azureOpenAIAPINames = [
   azureOpenAIWeightedRoundRobinAPIv2.name
   azureOpenAIRetryWithPayAsYouGoAPI.name
   azureOpenAIRetryWithPayAsYouGoAPIv2.name
-  azureOpenAIAdaptiveRateLimitingAPI.name
   azureOpenAILatencyRoutingAPI.name
   azureOpenAIUsageTrackingAPI.name
+  azureOpenAIPrioritizationTokenCalculatingAPI.name
+  azureOpenAIPrioritizationTokenTrackingAPI.name
   helperAPI.name
 ]
 
-resource azureOpenAIProductAPIAssociation 'Microsoft.ApiManagement/service/products/apis@2023-05-01-preview' = [
+resource azureOpenAIProductAPIAssociation 'Microsoft.ApiManagement/service/products/apis@2024-05-01' = [
   for apiName in azureOpenAIAPINames: {
     name: '${apiManagementServiceName}/${azureOpenAIProduct.name}/${apiName}'
   }
 ]
 
-resource ptuBackendOne 'Microsoft.ApiManagement/service/backends@2023-05-01-preview' = {
+resource ptuBackendOne 'Microsoft.ApiManagement/service/backends@2024-05-01' = {
   parent: apiManagementService
   name: 'ptu-backend-1'
-  properties:{
+  properties: {
     protocol: 'http'
     url: ptuDeploymentOneBaseUrl
     credentials: {
@@ -238,10 +287,10 @@ resource ptuBackendOne 'Microsoft.ApiManagement/service/backends@2023-05-01-prev
   }
 }
 
-resource ptuBackendOneWithCircuitBreaker 'Microsoft.ApiManagement/service/backends@2023-05-01-preview' = {
+resource ptuBackendOneWithCircuitBreaker 'Microsoft.ApiManagement/service/backends@2024-05-01' = {
   parent: apiManagementService
   name: 'ptu-backend-1-with-circuit-breaker'
-  properties:{
+  properties: {
     protocol: 'http'
     url: ptuDeploymentOneBaseUrl
     credentials: {
@@ -257,7 +306,7 @@ resource ptuBackendOneWithCircuitBreaker 'Microsoft.ApiManagement/service/backen
             errorReasons: [
               '429s'
             ]
-            interval: 'PT10S' 
+            interval: 'PT10S'
             statusCodeRanges: [
               {
                 min: 429
@@ -266,7 +315,7 @@ resource ptuBackendOneWithCircuitBreaker 'Microsoft.ApiManagement/service/backen
             ]
           }
           name: 'retry-with-payg-breaker-rule'
-          tripDuration: 'PT1M'  
+          tripDuration: 'PT1M'
           acceptRetryAfter: true
         }
       ]
@@ -274,10 +323,10 @@ resource ptuBackendOneWithCircuitBreaker 'Microsoft.ApiManagement/service/backen
   }
 }
 
-resource payAsYouGoBackendOne 'Microsoft.ApiManagement/service/backends@2023-05-01-preview' = {
+resource payAsYouGoBackendOne 'Microsoft.ApiManagement/service/backends@2024-05-01' = {
   parent: apiManagementService
   name: 'payg-backend-1'
-  properties:{
+  properties: {
     protocol: 'http'
     url: payAsYouGoDeploymentOneBaseUrl
     credentials: {
@@ -288,10 +337,10 @@ resource payAsYouGoBackendOne 'Microsoft.ApiManagement/service/backends@2023-05-
   }
 }
 
-resource payAsYouGoBackendTwo 'Microsoft.ApiManagement/service/backends@2023-05-01-preview' = {
+resource payAsYouGoBackendTwo 'Microsoft.ApiManagement/service/backends@2024-05-01' = {
   parent: apiManagementService
   name: 'payg-backend-2'
-  properties:{
+  properties: {
     protocol: 'http'
     url: payAsYouGoDeploymentTwoBaseUrl
     credentials: {
@@ -305,10 +354,10 @@ resource payAsYouGoBackendTwo 'Microsoft.ApiManagement/service/backends@2023-05-
 resource simpleRoundRobinBackendPool 'Microsoft.ApiManagement/service/backends@2023-09-01-preview' = {
   parent: apiManagementService
   name: 'simple-round-robin-backend-pool'
-  properties:{
+  properties: {
     type: 'Pool'
     pool: {
-      services:[
+      services: [
         {
           id: payAsYouGoBackendOne.id
           weight: 1
@@ -327,10 +376,10 @@ resource simpleRoundRobinBackendPool 'Microsoft.ApiManagement/service/backends@2
 resource weightedRoundRobinBackendPool 'Microsoft.ApiManagement/service/backends@2023-09-01-preview' = {
   parent: apiManagementService
   name: 'weighted-round-robin-backend-pool'
-  properties:{
+  properties: {
     type: 'Pool'
     pool: {
-      services:[
+      services: [
         {
           id: payAsYouGoBackendOne.id
           weight: 2
@@ -349,10 +398,10 @@ resource weightedRoundRobinBackendPool 'Microsoft.ApiManagement/service/backends
 resource retryWithPayAsYouGoBackendPool 'Microsoft.ApiManagement/service/backends@2023-09-01-preview' = {
   parent: apiManagementService
   name: 'retry-with-payg-backend-pool'
-  properties:{
+  properties: {
     type: 'Pool'
     pool: {
-      services:[
+      services: [
         {
           id: ptuBackendOneWithCircuitBreaker.id
           weight: 1
@@ -368,7 +417,7 @@ resource retryWithPayAsYouGoBackendPool 'Microsoft.ApiManagement/service/backend
   }
 }
 
-resource azureOpenAIProductSubscriptionOne 'Microsoft.ApiManagement/service/subscriptions@2023-05-01-preview' = {
+resource azureOpenAIProductSubscriptionOne 'Microsoft.ApiManagement/service/subscriptions@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-product-subscription-one'
   properties: {
@@ -378,7 +427,7 @@ resource azureOpenAIProductSubscriptionOne 'Microsoft.ApiManagement/service/subs
   }
 }
 
-resource azureOpenAIProductSubscriptionTwo 'Microsoft.ApiManagement/service/subscriptions@2023-05-01-preview' = {
+resource azureOpenAIProductSubscriptionTwo 'Microsoft.ApiManagement/service/subscriptions@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-product-subscription-two'
   properties: {
@@ -388,7 +437,7 @@ resource azureOpenAIProductSubscriptionTwo 'Microsoft.ApiManagement/service/subs
   }
 }
 
-resource azureOpenAIProductSubscriptionThree 'Microsoft.ApiManagement/service/subscriptions@2023-05-01-preview' = {
+resource azureOpenAIProductSubscriptionThree 'Microsoft.ApiManagement/service/subscriptions@2024-05-01' = {
   parent: apiManagementService
   name: 'aoai-product-subscription-three'
   properties: {
@@ -398,7 +447,7 @@ resource azureOpenAIProductSubscriptionThree 'Microsoft.ApiManagement/service/su
   }
 }
 
-resource simpleRoundRobinPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource simpleRoundRobinPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'simple-round-robin'
   properties: {
@@ -408,7 +457,7 @@ resource simpleRoundRobinPolicyFragment 'Microsoft.ApiManagement/service/policyF
   dependsOn: [payAsYouGoBackendOne, payAsYouGoBackendTwo]
 }
 
-resource azureOpenAISimpleRoundRobinAPIPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAISimpleRoundRobinAPIPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAISimpleRoundRobinAPI
   name: 'policy'
   properties: {
@@ -418,7 +467,7 @@ resource azureOpenAISimpleRoundRobinAPIPolicy 'Microsoft.ApiManagement/service/a
   dependsOn: [simpleRoundRobinPolicyFragment]
 }
 
-resource simpleRoundRobinPolicyFragmentv2 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource simpleRoundRobinPolicyFragmentv2 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'simple-round-robin-v2'
   properties: {
@@ -428,7 +477,7 @@ resource simpleRoundRobinPolicyFragmentv2 'Microsoft.ApiManagement/service/polic
   dependsOn: [simpleRoundRobinBackendPool]
 }
 
-resource azureOpenAISimpleRoundRobinAPIPolicyv2 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAISimpleRoundRobinAPIPolicyv2 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAISimpleRoundRobinAPIv2
   name: 'policy'
   properties: {
@@ -438,7 +487,7 @@ resource azureOpenAISimpleRoundRobinAPIPolicyv2 'Microsoft.ApiManagement/service
   dependsOn: [simpleRoundRobinPolicyFragmentv2]
 }
 
-resource weightedRoundRobinPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource weightedRoundRobinPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'weighted-round-robin'
   properties: {
@@ -448,7 +497,7 @@ resource weightedRoundRobinPolicyFragment 'Microsoft.ApiManagement/service/polic
   dependsOn: [payAsYouGoBackendOne, payAsYouGoBackendTwo]
 }
 
-resource azureOpenAIWeightedRoundRobinAPIPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAIWeightedRoundRobinAPIPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAIWeightedRoundRobinAPI
   name: 'policy'
   properties: {
@@ -458,7 +507,7 @@ resource azureOpenAIWeightedRoundRobinAPIPolicy 'Microsoft.ApiManagement/service
   dependsOn: [weightedRoundRobinPolicyFragment]
 }
 
-resource weightedRoundRobinPolicyFragmentv2 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource weightedRoundRobinPolicyFragmentv2 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'weighted-round-robin-v2'
   properties: {
@@ -468,7 +517,7 @@ resource weightedRoundRobinPolicyFragmentv2 'Microsoft.ApiManagement/service/pol
   dependsOn: [weightedRoundRobinBackendPool]
 }
 
-resource azureOpenAIWeightedRoundRobinAPIPolicyv2 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAIWeightedRoundRobinAPIPolicyv2 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAIWeightedRoundRobinAPIv2
   name: 'policy'
   properties: {
@@ -478,26 +527,7 @@ resource azureOpenAIWeightedRoundRobinAPIPolicyv2 'Microsoft.ApiManagement/servi
   dependsOn: [weightedRoundRobinPolicyFragmentv2]
 }
 
-resource adaptiveRateLimitingPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
-  parent: apiManagementService
-  name: 'adaptive-rate-limiting'
-  properties: {
-    value: loadTextContent('../../../capabilities/rate-limiting/adaptive-rate-limiting.xml')
-    format: 'rawxml'
-  }
-}
-
-resource azureOpenAIAdaptiveRateLimitingPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
-  parent: azureOpenAIAdaptiveRateLimitingAPI
-  name: 'policy'
-  properties: {
-    value: loadTextContent('../../../capabilities/rate-limiting/adaptive-rate-limiting-policy.xml')
-    format: 'rawxml'
-  }
-  dependsOn: [payAsYouGoBackendOne, adaptiveRateLimitingPolicyFragment]
-}
-
-resource retryWithPayAsYouGoPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource retryWithPayAsYouGoPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'retry-with-payg'
   properties: {
@@ -507,7 +537,7 @@ resource retryWithPayAsYouGoPolicyFragment 'Microsoft.ApiManagement/service/poli
   dependsOn: [ptuBackendOne, payAsYouGoBackendOne]
 }
 
-resource azureOpenAIRetryWithPayAsYouGoAPIPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAIRetryWithPayAsYouGoAPIPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAIRetryWithPayAsYouGoAPI
   name: 'policy'
   properties: {
@@ -517,7 +547,7 @@ resource azureOpenAIRetryWithPayAsYouGoAPIPolicy 'Microsoft.ApiManagement/servic
   dependsOn: [retryWithPayAsYouGoPolicyFragment]
 }
 
-resource retryWithPayAsYouGoPolicyFragmentv2 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource retryWithPayAsYouGoPolicyFragmentv2 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'retry-with-payg-v2'
   properties: {
@@ -527,7 +557,7 @@ resource retryWithPayAsYouGoPolicyFragmentv2 'Microsoft.ApiManagement/service/po
   dependsOn: [retryWithPayAsYouGoBackendPool]
 }
 
-resource azureOpenAIRetryWithPayAsYouGoAPIPolicyv2 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAIRetryWithPayAsYouGoAPIPolicyv2 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAIRetryWithPayAsYouGoAPIv2
   name: 'policy'
   properties: {
@@ -537,7 +567,7 @@ resource azureOpenAIRetryWithPayAsYouGoAPIPolicyv2 'Microsoft.ApiManagement/serv
   dependsOn: [retryWithPayAsYouGoPolicyFragmentv2]
 }
 
-resource latencyRoutingInboundPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource latencyRoutingInboundPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'latency-routing-inbound'
   properties: {
@@ -547,7 +577,7 @@ resource latencyRoutingInboundPolicyFragment 'Microsoft.ApiManagement/service/po
   dependsOn: [payAsYouGoBackendOne]
 }
 
-resource latencyRoutingBackendPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource latencyRoutingBackendPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'latency-routing-backend'
   properties: {
@@ -556,7 +586,7 @@ resource latencyRoutingBackendPolicyFragment 'Microsoft.ApiManagement/service/po
   }
 }
 
-resource azureOpenAILatencyRoutingPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAILatencyRoutingPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAILatencyRoutingAPI
   name: 'policy'
   properties: {
@@ -566,7 +596,7 @@ resource azureOpenAILatencyRoutingPolicy 'Microsoft.ApiManagement/service/apis/p
   dependsOn: [latencyRoutingInboundPolicyFragment, latencyRoutingBackendPolicyFragment]
 }
 
-resource usageTrackingPolicyFragmentInbound 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource usageTrackingPolicyFragmentInbound 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'usage-tracking-inbound'
   properties: {
@@ -576,7 +606,7 @@ resource usageTrackingPolicyFragmentInbound 'Microsoft.ApiManagement/service/pol
   dependsOn: [payAsYouGoBackendOne]
 }
 
-resource usageTrackingPolicyFragmentOutbound 'Microsoft.ApiManagement/service/policyFragments@2023-05-01-preview' = {
+resource usageTrackingPolicyFragmentOutbound 'Microsoft.ApiManagement/service/policyFragments@2024-05-01' = {
   parent: apiManagementService
   name: 'usage-tracking-outbound'
   properties: {
@@ -586,7 +616,7 @@ resource usageTrackingPolicyFragmentOutbound 'Microsoft.ApiManagement/service/po
   dependsOn: [eventHubLogger]
 }
 
-resource usageTrackingPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAIUsageTrackingPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: azureOpenAIUsageTrackingAPI
   name: 'policy'
   properties: {
@@ -596,7 +626,25 @@ resource usageTrackingPolicy 'Microsoft.ApiManagement/service/apis/policies@2023
   dependsOn: [usageTrackingPolicyFragmentInbound, usageTrackingPolicyFragmentOutbound]
 }
 
-resource helperAPISetPreferredBackends 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+resource azureOpenAIPrioritizationTokenCalculatingPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
+  parent: azureOpenAIPrioritizationTokenCalculatingAPI
+  name: 'policy'
+  properties: {
+    value: loadTextContent('../../../capabilities/prioritization/prioritization-token-calculating.xml')
+    format: 'rawxml'
+  }
+}
+
+resource azureOpenAIPrioritizationTokenTrackingPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
+  parent: azureOpenAIPrioritizationTokenTrackingAPI
+  name: 'policy'
+  properties: {
+    value: loadTextContent('../../../capabilities/prioritization/prioritization-token-tracking.xml')
+    format: 'rawxml'
+  }
+}
+
+resource helperAPISetPreferredBackends 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   parent: helperAPI
   name: 'policy'
   properties: {
@@ -615,7 +663,12 @@ resource eventHubsDataSenderRoleDefinition 'Microsoft.Authorization/roleDefiniti
 }
 
 resource assignEventHubsDataSenderToApiManagement 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(resourceGroup().id, eventHubNamespace.name, apiManagementService.name, 'assignEventHubsDataSenderToApiManagement')
+  name: guid(
+    resourceGroup().id,
+    eventHubNamespace.name,
+    apiManagementService.name,
+    'assignEventHubsDataSenderToApiManagement'
+  )
   scope: eventHubNamespace
   properties: {
     description: 'Assign EventHubsDataSender role to API Management'
@@ -639,7 +692,7 @@ resource eventHubLogger 'Microsoft.ApiManagement/service/loggers@2022-04-01-prev
   }
 }
 
-resource appInsights 'Microsoft.Insights/components@2020-02-02' existing= {
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
   name: appInsightsName
 }
 
@@ -656,11 +709,80 @@ resource appInsightsLogger 'Microsoft.ApiManagement/service/loggers@2022-04-01-p
   }
 }
 
-resource azureOpenAIUsageTrackingAPIv2Diagnostic 'Microsoft.ApiManagement/service/apis/diagnostics@2023-05-01-preview' = {
+resource azureMonitorLogger 'Microsoft.ApiManagement/service/loggers@2022-04-01-preview' = {
+  name: 'azuremonitor'
+  parent: apiManagementService
+  properties: {
+    loggerType: 'azureMonitor'
+    isBuffered: true
+  }
+}
+
+resource allApisAzureMonitorDiagnostics 'Microsoft.ApiManagement/service/diagnostics@2024-05-01' = {
+  parent: apiManagementService
+  name: 'azuremonitor'
+  properties: {
+    loggerId: azureMonitorLogger.id
+    metrics: true
+    verbosity: 'information'
+    logClientIp: false
+    sampling: {
+      percentage: 100
+      samplingType: 'fixed'
+    }
+    frontend: {
+      request: {
+        headers: [
+          'x-priority'
+        ]
+      }
+      response: {
+        headers: [
+          'x-gw-ratelimit-reason'
+          'x-gw-ratelimit-value'
+          'x-gw-remaining-tokens'
+          'x-gw-remaining-requests'
+          'x-gw-priority'
+        ]
+      }
+    }
+    backend: {
+      request: {
+        headers: []
+      }
+      response: {
+        headers: [
+          'x-ratelimit-remaining-tokens'
+          'x-ratelimit-remaining-requests'
+        ]
+      }
+    }
+  }
+}
+
+resource azureOpenAIUsageTrackingAPIDiagnostics 'Microsoft.ApiManagement/service/apis/diagnostics@2024-05-01' = {
   parent: azureOpenAIUsageTrackingAPI
   name: 'applicationinsights'
   properties: {
-    loggerId: appInsightsLogger.id  
+    loggerId: appInsightsLogger.id
+    metrics: true
+  }
+}
+
+resource azureOpenAIPrioritizationTokenCalculatingAPIDiagnostics 'Microsoft.ApiManagement/service/apis/diagnostics@2024-05-01' = {
+  parent: azureOpenAIPrioritizationTokenCalculatingAPI
+  name: 'applicationinsights'
+  properties: {
+    loggerId: appInsightsLogger.id
+    metrics: true
+  }
+}
+
+resource azureOpenAIPrioritizationTokenTrackingAPIDiagnostics 'Microsoft.ApiManagement/service/apis/diagnostics@2024-05-01' = {
+  parent: azureOpenAIPrioritizationTokenTrackingAPI
+  name: 'applicationinsights'
+  properties: {
+    loggerId: appInsightsLogger.id
     metrics: true
   }
 }
@@ -674,7 +796,7 @@ resource apiManagementDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@
   scope: apiManagementService
   properties: {
     workspaceId: logAnalytics.id
-    logAnalyticsDestinationType: 'Dedicated' 
+    logAnalyticsDestinationType: 'Dedicated'
     logs: [
       {
         categoryGroup: 'allLogs'

@@ -58,14 +58,15 @@ build_image() {
     local simulator_path=$1
     local acr_name=$2
     local acr_login_server=$3
+    local image_tag=$4
 
-    src_path=$(realpath "$simulator_path/src/aoai-simulated-api")
+    src_path=$(realpath "$simulator_path/src/aoai-api-simulator")
 
     # create a tik_token_cache folder to avoid failure in the build
     mkdir -p "$src_path/tiktoken_cache"
 
     az acr login --name "$acr_name"
-    az acr build --image "${acr_login_server}/aoai-simulated-api:latest" --registry "$acr_name" --file "$src_path/Dockerfile" "$src_path"
+    az acr build --image "${acr_login_server}/aoai-api-simulator:$image_tag" --registry "$acr_name" --file "$src_path/Dockerfile" "$src_path"
     
     echo -e "\n"
 }
@@ -81,11 +82,13 @@ build_image() {
 output_generated_keys="$script_dir/../infra/simulators/generated-keys.json"
 output_simulator_base="$script_dir/../infra/simulators/output-simulator-base.json"
 output_simulators="$script_dir/../infra/simulators/output-simulators.json"
+output_genai_base="$script_dir/../infra/apim-genai/output-genai-base.json"
 
 # Ensure output-keys.json exists and add empty JSON object if not
 if [[ ! -f "$output_generated_keys" ]]; then
   echo "{}" > "$output_generated_keys"
 fi
+
 
 if [[ "${USE_SIMULATOR}" == "true" ]]; then
   echo "Using OpenAI API Simulator"
@@ -108,17 +111,45 @@ if [[ "${USE_SIMULATOR}" == "true" ]]; then
   # Clone simulator
   #
   simulator_path="$script_dir/simulator"
-  simulator_tag=${SIMULATOR_GIT_TAG:=v0.3}
-  if [[ -d "$simulator_path" ]]; then
-    echo "Simulator folder already exists - skipping clone."
+  simulator_git_tag=${SIMULATOR_GIT_TAG:=v0.5}
+
+  if [[ -n "$SIMULATOR_IMAGE_TAG" ]]; then
+    simulator_image_tag=$SIMULATOR_IMAGE_TAG
   else
-    echo "Cloning simulator (tag: ${simulator_tag})..."
+    simulator_image_tag=$simulator_git_tag
+  fi
+  simulator_image_tag=${simulator_image_tag//\//_} # Replace slashes with underscores
+  echo "Using simulator git tag: $simulator_git_tag"
+  echo "Using simulator image tag: $simulator_image_tag"
+  
+  clone_simulator=true
+  if [[ -d "$simulator_path" ]]; then
+    if [[ -f "$script_dir/.simulator_tag" ]]; then
+      previous_tag=$(cat "$script_dir/.simulator_tag")
+      if [[ "$previous_tag" == "$simulator_git_tag" ]]; then
+        clone_simulator=false
+        echo "Simulator folder already exists - skipping clone."
+      else
+        rm -rf "$simulator_path"
+        echo "Cloned simulator has tag ${previous_tag} - re-cloning ${simulator_git_tag}."
+      fi
+    else
+        rm -rf "$simulator_path"
+        echo "Cloned simulator exists without tag file - re-cloning ${simulator_git_tag}."
+    fi
+  else
+    echo "Simulator folder does not exist - cloning."
+  fi
+
+  if [[ "$clone_simulator" == "true" ]]; then
+    echo "Cloning simulator (tag: ${simulator_git_tag})..."
     git clone \
       --depth 1 \
-      --branch $simulator_tag \
+      --branch "$simulator_git_tag" \
       --config advice.detachedHead=false \
-      https://github.com/stuartleeks/aoai-simulated-api \
+      https://github.com/microsoft/aoai-api-simulator \
       "$simulator_path"
+    echo "$simulator_git_tag" > "$script_dir/.simulator_tag"
   fi
 
   #
@@ -149,8 +180,7 @@ EOF
 
   deployment_name="sim-base-${RESOURCE_NAME_PREFIX}"
 
-  echo "$deployment_name"
-  echo "=="
+  echo -e "\n=="
   echo "== Starting bicep deployment ${deployment_name}"
   echo "=="
   output=$(az deployment sub create \
@@ -209,41 +239,21 @@ EOF
   fi
 
   set +e
-  existing_image=$(az acr repository show --name $acr_name --image "aoai-simulated-api" --output json 2>&1)
+  existing_image=$(az acr repository show-tags --name "$acr_name" --repository "aoai-api-simulator" -o tsv --query "contains(@, '${simulator_image_tag}')" 2>&1)
   set -e
 
-  if echo "$existing_image" | jq . > /dev/null 2>&1; then
+  if [[ "$existing_image" == "true" ]]; then
     if [[ "${FORCE_SIMULATOR_BUILD}" != "true" ]]; then
-      echo "Simulator docker image previously pushed. Skipping build."
+      echo "Simulator docker image previously pushed with tag $simulator_image_tag. Skipping build."
     else
       echo "Simulator docker image previously pushed. Forcing build."
-      build_image "$simulator_path" "$acr_name" "$acr_login_server"
+      build_image "$simulator_path" "$acr_name" "$acr_login_server" "$simulator_image_tag"
     fi
   else
-    echo "No simulator docker image previously pushed. Building."
-    build_image "$simulator_path" "$acr_name" "$acr_login_server"
+    echo "No simulator docker image previously pushed with tag $simulator_image_tag. Building."
+    build_image "$simulator_path" "$acr_name" "$acr_login_server" "$simulator_image_tag"
   fi
   
-  #
-  # Upload simulator deployment config files to file share
-  #
-  echo "Uploading simulator config files to file share..."
-  storage_account_name=$(jq -r '.storageAccountName // ""' < "$output_simulator_base")
-  if [[ -z "$storage_account_name" ]]; then
-    echo "Storage account name (storageAccountName) not found in output-simulator-base.json"
-    exit 1
-  fi
-
-  file_share_name=$(jq -r '.fileShareName // ""' < "$output_simulator_base")
-  if [[ -z "$file_share_name" ]]; then
-    echo "File share name (fileShareName) not found in output-simulator-base.json"
-    exit 1
-  fi
-
-  storage_key=$(az storage account keys list --account-name "$storage_account_name" -o tsv --query '[0].value')
-
-  az storage file upload-batch --destination "$file_share_name" --source "$script_dir/../infra/simulators/simulator_file_content" --account-name "$storage_account_name" --account-key "$storage_key"
-
   #
   # Deploy simulator instances
   #
@@ -284,11 +294,11 @@ cat << EOF > "$script_dir/../infra/simulators/azuredeploy.parameters.json"
     "containerRegistryName": {
       "value": "${acr_name}"
     },
+    "simulatorImageTag": {
+      "value": "${simulator_image_tag}"
+    },
     "keyVaultName": {
       "value": "${key_vault_name}"
-    },
-    "storageAccountName": {
-      "value": "${storage_account_name}"
     },
     "appInsightsName": {
       "value": "${app_insights_name}"
@@ -299,8 +309,7 @@ EOF
 
   deployment_name="sims-${RESOURCE_NAME_PREFIX}"
 
-  echo "$deployment_name"
-  echo "=="
+  echo -e "\n=="
   echo "== Starting bicep deployment ${deployment_name}"
   echo "=="
   output=$(az deployment sub create \
@@ -338,6 +347,92 @@ EOF
   fi
   PAYG_DEPLOYMENT_2_BASE_URL="https://${payg2_fqdn}"
 
+  ptu_deployment_1_api_key=$SIMULATOR_API_KEY
+  payg_deployment_1_api_key=$SIMULATOR_API_KEY
+  payg_deployment_2_api_key=$SIMULATOR_API_KEY
+
+else
+
+  cd "$script_dir/../infra/apim-genai"
+
+cat << EOF > "$script_dir/../infra/apim-genai/azuredeploy.parameters.json"
+{
+  "\$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workloadName" :{ 
+        "value": "${RESOURCE_NAME_PREFIX}"
+    },
+    "environment" :{ 
+        "value": "${ENVIRONMENT_TAG}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+  }
+}
+EOF
+
+  deployment_name="genai-base-${RESOURCE_NAME_PREFIX}"
+
+  echo -e "\n=="
+  echo "== Starting bicep deployment ${deployment_name}"
+  echo "=="
+  output=$(az deployment sub create \
+    --location "$AZURE_LOCATION" \
+    --template-file base.bicep \
+    --name "$deployment_name" \
+    --parameters azuredeploy.parameters.json \
+    --output json)
+
+  echo "== Completed bicep deployment ${deployment_name}"
+
+  echo "$output" | jq "[.properties.outputs | to_entries | .[] | {key:.key, value: .value.value}] | from_entries" > "$output_genai_base"
+
+  resource_group_name=$(jq -r '.resourceGroupName // ""' < "$output_genai_base")
+  app_insights_name=$(jq -r '.appInsightsName // ""' < "$output_genai_base")
+  log_analytics_name=$(jq -r '.logAnalyticsName // ""' < "$output_genai_base")
+
+  if [[ -z "$resource_group_name" ]]; then
+    echo "Resource group name (resourceGroupName) not found in output-genai-base.json"
+    exit 1
+  fi
+
+  if [[ -z "$app_insights_name" ]]; then
+    echo "App Insights name (appInsightsName) not found in output-genai-base.json"
+    exit 1
+  fi
+
+  if [[ -z "$log_analytics_name" ]]; then
+    echo "Log Analytics name (logAnalyticsName) not found in output-genai-base.json"
+    exit 1
+  fi
+
+  if [[ ${#PTU_DEPLOYMENT_1_API_KEY} -eq 0 ]]; then
+    echo 'ERROR: Missing environment variable PTU_DEPLOYMENT_1_API_KEY' 1>&2
+    exit 6
+  else
+    PTU_DEPLOYMENT_1_API_KEY="${PTU_DEPLOYMENT_1_API_KEY%$'\r'}"
+  fi
+
+  if [[ ${#PAYG_DEPLOYMENT_1_API_KEY} -eq 0 ]]; then
+    echo 'ERROR: Missing environment variable PAYG_DEPLOYMENT_1_API_KEY' 1>&2
+    exit 6
+  else
+    PAYG_DEPLOYMENT_1_API_KEY="${PAYG_DEPLOYMENT_1_API_KEY%$'\r'}"  
+  fi
+
+  if [[ ${#PAYG_DEPLOYMENT_2_API_KEY} -eq 0 ]]; then
+    echo 'ERROR: Missing environment variable PAYG_DEPLOYMENT_2_API_KEY' 1>&2
+    exit 6
+  else
+    PAYG_DEPLOYMENT_2_API_KEY="${PAYG_DEPLOYMENT_2_API_KEY%$'\r'}"  
+  fi
+
+  ptu_deployment_1_api_key=$PTU_DEPLOYMENT_1_API_KEY
+  payg_deployment_1_api_key=$PAYG_DEPLOYMENT_1_API_KEY
+  payg_deployment_2_api_key=$PAYG_DEPLOYMENT_2_API_KEY
+
 fi
 
 #
@@ -373,19 +468,19 @@ cat << EOF > "$script_dir/../infra/apim-genai/azuredeploy.parameters.json"
         "value": "${PTU_DEPLOYMENT_1_BASE_URL}"
     },
     "ptuDeploymentOneApiKey": {
-        "value": "${SIMULATOR_API_KEY}"
+        "value": "${ptu_deployment_1_api_key}"
     },
     "payAsYouGoDeploymentOneBaseUrl": {
         "value": "${PAYG_DEPLOYMENT_1_BASE_URL}"
     },
     "payAsYouGoDeploymentOneApiKey": {
-        "value": "${SIMULATOR_API_KEY}"
+        "value": "${payg_deployment_1_api_key}"
     },
     "payAsYouGoDeploymentTwoBaseUrl": {
         "value": "${PAYG_DEPLOYMENT_2_BASE_URL}"
     },
     "payAsYouGoDeploymentTwoApiKey": {
-        "value": "${SIMULATOR_API_KEY}"
+        "value": "${payg_deployment_2_api_key}"
     },
     "logAnalyticsName": {
         "value": "${log_analytics_name}"
@@ -399,8 +494,7 @@ EOF
 
 deployment_name="genai-${RESOURCE_NAME_PREFIX}"
 
-echo "$deployment_name"
-echo "=="
+echo -e "\n=="
 echo "== Starting bicep deployment ${deployment_name}"
 echo "=="
 output=$(az deployment group create \
